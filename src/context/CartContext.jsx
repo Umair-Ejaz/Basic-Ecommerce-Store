@@ -1,52 +1,22 @@
-import React, { createContext, useContext, useReducer } from "react";
+import { createContext, useContext, useState } from "react";
 
 const CartContext = createContext();
 
-const initialState = { items: [] };
-
-function reducer(state, action) {
-  switch (action.type) {
-    case "ADD":
-      {
-        const existing = state.items.find(i => i.id === action.payload.id);
-        if (existing) {
-          return {
-            ...state,
-            items: state.items.map(i =>
-              i.id === action.payload.id ? { ...i, qty: i.qty + action.payload.qty } : i
-            )
-          };
-        }
-        return { ...state, items: [...state.items, action.payload] };
-      }
-    case "REMOVE":
-      return { ...state, items: state.items.filter(i => i.id !== action.payload) };
-    case "UPDATE_QTY":
-      return {
-        ...state,
-        items: state.items.map(i => i.id === action.payload.id ? { ...i, qty: action.payload.qty } : i)
-      };
-    case "CLEAR":
-      return { ...state, items: [] };
-    default:
-      return state;
-  }
-}
-
 export function CartProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [cart, setCart] = useState([]);
 
-  const addToCart = (product, qty = 1) =>
-    dispatch({ type: "ADD", payload: { ...product, qty } });
+  const addToCart = (product) => {
+    setCart((prev) => [...prev, product]);
+  };
 
-  const removeFromCart = (id) => dispatch({ type: "REMOVE", payload: id });
-  const updateQty = (id, qty) => dispatch({ type: "UPDATE_QTY", payload: { id, qty } });
-  const clearCart = () => dispatch({ type: "CLEAR" });
+  const removeFromCart = (id) => {
+    setCart((prev) => prev.filter((item) => item.id !== id));
+  };
 
-  const subtotal = state.items.reduce((s, i) => s + i.price * i.qty, 0);
+  const clearCart = () => setCart([]);
 
   return (
-    <CartContext.Provider value={{ items: state.items, addToCart, removeFromCart, updateQty, clearCart, subtotal }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>
       {children}
     </CartContext.Provider>
   );
